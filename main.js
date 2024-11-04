@@ -1,6 +1,6 @@
-import { mapWidth, mapHeight } from './map.js';
+import { mapWidth, mapHeight, map } from './map.js';
 import { drawMap } from './render.js';
-import { playerPosition, movePlayer } from './player.js';
+import { playerPosition } from './player.js';
 import { astar } from './pathfinding.js';
 
 const canvas = document.getElementById("gameCanvas");
@@ -11,12 +11,12 @@ canvas.height = window.innerHeight;
 const TILE_WIDTH = 64;
 const TILE_HEIGHT = 32;
 
-const PLAYER_SPEED = 0.15; // Speed of the player
+const PLAYER_SPEED = 0.15;
 
 let hoveredTile = null;
 let path = [];
 let pathIndex = 0;
-let targetPosition = null; // The target position for the player to move toward
+let targetPosition = null;
 
 function screenToIso(mouseX, mouseY) {
     const x = ((mouseX - canvas.width / 2) / (TILE_WIDTH / 2) +
@@ -24,6 +24,15 @@ function screenToIso(mouseX, mouseY) {
     const y = ((mouseY - 100) / (TILE_HEIGHT / 2) -
         (mouseX - canvas.width / 2) / (TILE_WIDTH / 2)) / 2;
     return { x: Math.floor(x), y: Math.floor(y) };
+}
+
+// Function to get the type of tile at the given coordinates
+function getTileType(tileCoords) {
+    if (tileCoords.x >= 0 && tileCoords.x < mapWidth &&
+        tileCoords.y >= 0 && tileCoords.y < mapHeight) {
+        return map[tileCoords.y][tileCoords.x];
+    }
+    return null;
 }
 
 canvas.addEventListener("mousemove", (event) => {
@@ -34,8 +43,16 @@ canvas.addEventListener("mousemove", (event) => {
 
     if (tileCoords.x >= 0 && tileCoords.x < mapWidth &&
         tileCoords.y >= 0 && tileCoords.y < mapHeight) {
-        hoveredTile = tileCoords;
-        canvas.style.cursor = 'pointer';
+
+        const tileType = getTileType(tileCoords);
+
+        if (tileType == 2) {
+            hoveredTile = null;
+            canvas.style.cursor = 'default';
+        } else {
+            hoveredTile = tileCoords;
+            canvas.style.cursor = 'pointer';
+        }
     } else {
         hoveredTile = null;
         canvas.style.cursor = 'default';
@@ -52,9 +69,15 @@ canvas.addEventListener("click", (event) => {
 
     if (tileCoords.x >= 0 && tileCoords.x < mapWidth &&
         tileCoords.y >= 0 && tileCoords.y < mapHeight) {
-        path = astar(playerPosition, tileCoords);
-        pathIndex = 0;
-        targetPosition = path.length > 0 ? path[0] : null; // Set target to the first tile in path
+        const tileType = getTileType(tileCoords);
+
+        // Only allow pathfinding if the tile is not an obstacle
+        if (tileType !== 2) {
+            path = astar(playerPosition, tileCoords);
+            pathIndex = 0;
+            targetPosition = path.length > 0 ? path[0] : null; // Set target to the first tile in path
+        }
+
         drawMap(ctx, hoveredTile, playerPosition);
     }
 });
