@@ -11,7 +11,7 @@ canvas.height = window.innerHeight;
 const TILE_WIDTH = 64;
 const TILE_HEIGHT = 32;
 
-const PLAYER_SPEED = 0.15;
+const PLAYER_SPEED = 0.1;
 
 let hoveredTile = null;
 let path = [];
